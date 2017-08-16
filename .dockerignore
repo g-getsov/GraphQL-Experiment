@@ -1,3 +1,6 @@
 Dockerfile
 docker-compose.yml
 tmp/*
+.idea
+.gitignore
+.git
