@@ -1,5 +1,12 @@
 version: '3'
 services:
+  postgres:
+    image: postgres:9.6.4-alpine
+    volumes:
+      - ./dbs/postgres/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
   neo4j:
     image: neo4j:3.2.3
     ports:
@@ -7,11 +14,16 @@ services:
       - "7687:7687"
     volumes:
       - ./dbs/n4j/data:/data
+  adminer:
+    image: adminer:4.3.1-standalone
+    ports:
+      - "9001:8080"
   graphql:
     # need privileged mode to be able to run debugger (remove for production!)
     privileged: true
     depends_on:
       - neo4j
+      - postgres
     build:
       context: ./
       dockerfile: Dockerfile

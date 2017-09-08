@@ -12,7 +12,7 @@ if [ "$hotswapenv" -ge 1 ]; then
   go get github.com/pilu/fresh
 
   # run fresh to listen for any code changes and rebuild the application
-  fresh -c runner.conf
+  fresh -c runner.conf &
 else
   if [ "$debugenv" -ge 1 ]; then
     # install remote go debugging package

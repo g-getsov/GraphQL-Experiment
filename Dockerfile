@@ -1,4 +1,4 @@
-FROM golang:1.8.3-alpine3.6
+FROM golang:1.9.0-alpine3.6
 
 # build arguments (get passed down from docker-compose)
 ARG debug=0
@@ -15,7 +15,10 @@ RUN go get github.com/graphql-go/handler
 RUN go get github.com/mnmtanish/go-graphiql
 RUN go get github.com/rs/cors
 
-# install neo4j package
+# install postgres driver
+RUN go get github.com/lib/pq
+
+# install neo4j driver
 RUN go get github.com/johnnadratowski/golang-neo4j-bolt-driver
 
 # expose the remote debugging port

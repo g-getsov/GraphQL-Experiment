@@ -6,10 +6,12 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
 	"github.com/mnmtanish/go-graphiql"
-	driver "github.com/johnnadratowski/golang-neo4j-bolt-driver"
+	sqlDriver "github.com/lib/pq"
+	neoDriver "github.com/johnnadratowski/golang-neo4j-bolt-driver"
+	"database/sql/driver"
 )
 
-type NeoConfig struct {
+type DbConfig struct {
 	Username string
 	Password string
 	Host string
@@ -17,11 +19,18 @@ type NeoConfig struct {
 }
 
 // Neo4j config
-var conf = NeoConfig{
+var neoConf = DbConfig{
 	"neo4j",
 	"over1234",
 	"neo4j",
 	"7687",
+}
+
+var postgresConf = DbConfig{
+	"admin",
+	"admin",
+	"postgres",
+	"5432",
 }
 
 type Person struct {
@@ -36,10 +45,16 @@ type Hobby struct {
 	Name string `json:"name"`
 }
 
-func getConnection() (driver.Conn, error) {
+func getPostgresConnection() (driver.Conn, error) {
+	db, err := sqlDriver.Open("postgres://" +postgresConf.Username+ ":" +postgresConf.Password+ "@" +postgresConf.Host+ ":" +postgresConf.Port)
 
-	//Init Neo driver
-	db, err := driver.NewDriver().OpenNeo("bolt://"+conf.Username+":"+conf.Password+"@"+conf.Host+":"+conf.Port)
+	if err != nil { log.Println("error connecting to neo4j", err) }
+
+	return db, err
+}
+
+func getNeoConnection() (neoDriver.Conn, error) {
+	db, err := neoDriver.NewDriver().OpenNeo("bolt://"+ neoConf.Username+":"+ neoConf.Password+"@"+ neoConf.Host+":"+ neoConf.Port)
 
 	if err != nil { log.Println("error connecting to neo4j", err) }
 
@@ -48,7 +63,7 @@ func getConnection() (driver.Conn, error) {
 
 func getPeople() []Person {
 
-	db, _ := getConnection()
+	db, _ := getNeoConnection()
 	defer db.Close()
 
 	cypher := `MATCH (n:Person) RETURN ID(n) as id, n.name as name, n.from LIMIT {limit}`
@@ -72,7 +87,7 @@ func getPeople() []Person {
 
 func getPerson(name string) Person {
 
-	db, _ := getConnection()
+	db, _ := getNeoConnection()
 	defer db.Close()
 
 	cypher := "MATCH (p:Person) WHERE p.name = {name} RETURN ID(p) as id, p.name, p.from"
@@ -114,7 +129,7 @@ func mapPerson(row []interface{}) (Person) {
 
 func getFriends(id int) []Person {
 
-	db, _ := getConnection()
+	db, _ := getNeoConnection()
 	defer  db.Close()
 
 	cypher := "MATCH (p:Person)-[r :FRIEND]->(friend) WHERE ID(p) = {id} RETURN ID(friend) as id, friend.name, friend.from"
@@ -136,7 +151,7 @@ func getFriends(id int) []Person {
 
 func getHobby(name string) Hobby {
 
-	db, _ := getConnection()
+	db, _ := getNeoConnection()
 	defer db.Close()
 
 	cypher := "MATCH (h:Hobby) WHERE h.name = {name} RETURN ID(h) as id, h.name"
